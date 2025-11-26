@@ -3,20 +3,23 @@ import supabase from "../lib/supabaseClient";
 
 const useStore = create((set, get) => ({
     // -----------------------------
-    //          USER
+    //          SYSTEME
     // -----------------------------
     user: null,
     gameState: null,
+    showMedia: true,
 
     // -----------------------------
-    //          STATS LOCALES & BOUTIQUE
+    //          STATS JEU
     // -----------------------------
     score: 0,
     perClick: 1,
     perSecond: 0,
     activeMedia: [],
 
-    // Coûts initiaux (Boutique)
+    // -----------------------------
+    //          BOUTIQUE (Coûts)
+    // -----------------------------
     clickUpgradeCost: 50,
     autoUpgradeCost: 100,
     catUpgradeCost: 250,
@@ -24,20 +27,33 @@ const useStore = create((set, get) => ({
     cat3UpgradeCost: 10000,
     volcanCost: 5000,
 
-    // États d'achat (Boutique)
+    // Clics Spéciaux
+    superClickCost: 500000,
+    superClickThreshold: 500000,
+
+    // --- NOUVEAU : MEGA & GIGA ---
+    megaClickCost: 5000000,       // 5 Millions
+    megaClickThreshold: 2000000,  // Visible à 2M
+
+    gigaClickCost: 20000000,      // 20 Millions
+    gigaClickThreshold: 10000000, // Visible à 10M
+
+    ultimateClickCost: 2500000,
+    ultimateClickThreshold: 1000000,
+
+    // -----------------------------
+    //          BOUTIQUE (États)
+    // -----------------------------
     catBought: false,
     cat2Bought: false,
     cat3Bought: false,
     volcanBought: false,
 
     // -----------------------------
-    //          FONCTIONS BASIQUES
+    //          FONCTIONS
     // -----------------------------
-    // Fonction requise par votre Login (Celle qui manquait !)
-    setGameState: (newState) => {
-        set(newState);
-    },
-
+    toggleMedia: () => set((state) => ({ showMedia: !state.showMedia })),
+    setGameState: (newState) => { set(newState); },
     setActiveMedia: (media) => set({ activeMedia: media }),
 
     setUser: async (user) => {
@@ -50,50 +66,48 @@ const useStore = create((set, get) => ({
                 .single();
 
             if (error && error.code === "PGRST116") {
-                // Créer une nouvelle partie si inexistante
                 const { data: newGame, error: insertError } = await supabase
                     .from("game_state")
                     .insert({ user_id: user.id })
                     .single();
-
                 if (insertError) console.error("Erreur insert:", insertError);
                 else set({
                     gameState: newGame,
                     score: newGame.score,
                     perClick: newGame.per_click,
                     perSecond: newGame.per_second,
-                    // Mapping pour le shop
-                    clickUpgradeCost: newGame.click_upgrade_cost,
-                    autoUpgradeCost: newGame.auto_upgrade_cost,
-                    catUpgradeCost: newGame.cat_upgrade_cost,
-                    cat2UpgradeCost: newGame.cat2_upgrade_cost,
-                    cat3UpgradeCost: newGame.cat3_upgrade_cost,
-                    volcanCost: newGame.volcan_cost,
-                    catBought: newGame.cat_bought,
-                    cat2Bought: newGame.cat2_bought,
-                    cat3Bought: newGame.cat3_bought,
-                    volcanBought: newGame.volcan_bought,
                     activeMedia: newGame.active_media,
                 });
             } else if (data) {
-                // Charger la partie existante
                 set({
                     gameState: data,
                     score: data.score,
                     perClick: data.per_click,
                     perSecond: data.per_second,
-                    // Mapping pour le shop
-                    clickUpgradeCost: data.click_upgrade_cost,
-                    autoUpgradeCost: data.auto_upgrade_cost,
-                    catUpgradeCost: data.cat_upgrade_cost,
-                    cat2UpgradeCost: data.cat2_upgrade_cost,
-                    cat3UpgradeCost: data.cat3_upgrade_cost,
-                    volcanCost: data.volcan_cost,
+                    activeMedia: data.active_media,
+                    // Mapping DB
+                    clickUpgradeCost: data.click_upgrade_cost || 50,
+                    autoUpgradeCost: data.auto_upgrade_cost || 100,
+                    catUpgradeCost: data.cat_upgrade_cost || 250,
+                    cat2UpgradeCost: data.cat2_upgrade_cost || 1000,
+                    cat3UpgradeCost: data.cat3_upgrade_cost || 10000,
+                    volcanCost: data.volcan_cost || 5000,
                     catBought: data.cat_bought,
                     cat2Bought: data.cat2_bought,
                     cat3Bought: data.cat3_bought,
                     volcanBought: data.volcan_bought,
-                    activeMedia: data.active_media,
+
+                    superClickCost: data.super_click_cost || 500000,
+                    superClickThreshold: data.super_click_threshold || 500000,
+
+                    // Mapping Mega & Giga
+                    megaClickCost: data.mega_click_cost || 5000000,
+                    megaClickThreshold: data.mega_click_threshold || 2000000,
+                    gigaClickCost: data.giga_click_cost || 20000000,
+                    gigaClickThreshold: data.giga_click_threshold || 10000000,
+
+                    ultimateClickCost: data.ultimate_click_cost || 2500000,
+                    ultimateClickThreshold: data.ultimate_click_threshold || 1000000,
                 });
             }
         } else {
@@ -101,9 +115,6 @@ const useStore = create((set, get) => ({
         }
     },
 
-    // -----------------------------
-    //          ACTIONS JEU
-    // -----------------------------
     addScore: async (value) => {
         const { user, gameState, score } = get();
         if (!user || !gameState) return;
@@ -112,26 +123,16 @@ const useStore = create((set, get) => ({
         await supabase.from("game_state").update({ score: newScore }).eq("id", gameState.id);
     },
 
-    addPerClick: async (value) => {
-        const { user, gameState, perClick } = get();
-        if (!user || !gameState) return;
-        const newPerClick = perClick + value;
-        set({ perClick: newPerClick });
-        await supabase.from("game_state").update({ per_click: newPerClick }).eq("id", gameState.id);
-    },
-
     addPerSecond: async () => {
         const { user, gameState, perSecond, score } = get();
         if (!user || !gameState || perSecond === 0) return;
         const newScore = score + perSecond;
         set({ score: newScore });
-        // Mise à jour DB (peut être optimisée pour être moins fréquente)
         await supabase.from("game_state").update({ score: newScore }).eq("id", gameState.id);
     },
 
-    // -----------------------------
-    //          ACTIONS SHOP
-    // -----------------------------
+    // --- ACHATS ---
+
     buyClickUpgrade: async () => {
         const { score, perClick, clickUpgradeCost, gameState } = get();
         if (score >= clickUpgradeCost) {
@@ -154,6 +155,69 @@ const useStore = create((set, get) => ({
         }
     },
 
+    buySuperClick: async () => {
+        const { score, perClick, superClickCost, superClickThreshold, gameState } = get();
+        if (score >= superClickCost) {
+            const newScore = score - superClickCost;
+            const newPerClick = perClick + 10000;
+            const newCost = Math.floor(superClickCost * 1.5);
+            const newThreshold = Math.floor(superClickThreshold * 1.5);
+            set({ score: newScore, perClick: newPerClick, superClickCost: newCost, superClickThreshold: newThreshold });
+            await supabase.from("game_state").update({ score: newScore, per_click: newPerClick, super_click_cost: newCost, super_click_threshold: newThreshold }).eq("id", gameState.id);
+        }
+    },
+
+    // --- NOUVEAU : MEGA CLIC (+100k) ---
+    buyMegaClick: async () => {
+        const { score, perClick, megaClickCost, megaClickThreshold, gameState } = get();
+        if (score >= megaClickCost) {
+            const newScore = score - megaClickCost;
+            const newPerClick = perClick + 100000; // +100k
+            const newCost = Math.floor(megaClickCost * 1.5);
+            const newThreshold = Math.floor(megaClickThreshold * 1.5);
+
+            set({ score: newScore, perClick: newPerClick, megaClickCost: newCost, megaClickThreshold: newThreshold });
+            await supabase.from("game_state").update({
+                score: newScore,
+                per_click: newPerClick,
+                mega_click_cost: newCost,
+                mega_click_threshold: newThreshold
+            }).eq("id", gameState.id);
+        }
+    },
+
+    // --- NOUVEAU : GIGA CLIC (+200k) ---
+    buyGigaClick: async () => {
+        const { score, perClick, gigaClickCost, gigaClickThreshold, gameState } = get();
+        if (score >= gigaClickCost) {
+            const newScore = score - gigaClickCost;
+            const newPerClick = perClick + 200000; // +200k
+            const newCost = Math.floor(gigaClickCost * 1.5);
+            const newThreshold = Math.floor(gigaClickThreshold * 1.5);
+
+            set({ score: newScore, perClick: newPerClick, gigaClickCost: newCost, gigaClickThreshold: newThreshold });
+            await supabase.from("game_state").update({
+                score: newScore,
+                per_click: newPerClick,
+                giga_click_cost: newCost,
+                giga_click_threshold: newThreshold
+            }).eq("id", gameState.id);
+        }
+    },
+
+    buyUltimateClick: async () => {
+        const { score, perClick, ultimateClickCost, ultimateClickThreshold, gameState } = get();
+        if (score >= ultimateClickCost) {
+            const newScore = score - ultimateClickCost;
+            const newPerClick = perClick * 3;
+            const newCost = Math.floor(ultimateClickCost * 4);
+            const newThreshold = Math.floor(ultimateClickThreshold * 2);
+            set({ score: newScore, perClick: newPerClick, ultimateClickCost: newCost, ultimateClickThreshold: newThreshold });
+            await supabase.from("game_state").update({ score: newScore, per_click: newPerClick, ultimate_click_cost: newCost, ultimate_click_threshold: newThreshold }).eq("id", gameState.id);
+        }
+    },
+
+    // Objets Spéciaux
     buyCatUpgrade: async () => {
         const { score, perSecond, catUpgradeCost, gameState } = get();
         if (score >= catUpgradeCost) {
@@ -163,7 +227,6 @@ const useStore = create((set, get) => ({
             await supabase.from("game_state").update({ score: newScore, per_second: newPerSecond, cat_bought: true }).eq("id", gameState.id);
         }
     },
-
     buyCat2Upgrade: async () => {
         const { score, perSecond, cat2UpgradeCost, gameState } = get();
         if (score >= cat2UpgradeCost) {
@@ -173,7 +236,6 @@ const useStore = create((set, get) => ({
             await supabase.from("game_state").update({ score: newScore, per_second: newPerSecond, cat2_bought: true }).eq("id", gameState.id);
         }
     },
-
     buyCat3Upgrade: async () => {
         const { score, perSecond, cat3UpgradeCost, gameState } = get();
         if (score >= cat3UpgradeCost) {
@@ -183,20 +245,16 @@ const useStore = create((set, get) => ({
             await supabase.from("game_state").update({ score: newScore, per_second: newPerSecond, cat3_bought: true }).eq("id", gameState.id);
         }
     },
-
     buyVolcan: async () => {
         const { score, perSecond, volcanCost, gameState } = get();
         if (score >= volcanCost) {
             const newScore = score - volcanCost;
-            const newPerSecond = perSecond + 30; // Simplification: ajout au par seconde
+            const newPerSecond = perSecond + 30;
             set({ score: newScore, perSecond: newPerSecond, volcanBought: true });
             await supabase.from("game_state").update({ score: newScore, per_second: newPerSecond, volcan_bought: true }).eq("id", gameState.id);
         }
     },
 
-    // -----------------------------
-    //          RESET
-    // -----------------------------
     resetGame: async () => {
         const { user, gameState } = get();
         if (!user || !gameState) return;
@@ -211,6 +269,16 @@ const useStore = create((set, get) => ({
             cat2_upgrade_cost: 1000,
             cat3_upgrade_cost: 10000,
             volcan_cost: 5000,
+            super_click_cost: 500000,
+            super_click_threshold: 500000,
+            // Reset Mega & Giga
+            mega_click_cost: 5000000,
+            mega_click_threshold: 2000000,
+            giga_click_cost: 20000000,
+            giga_click_threshold: 10000000,
+
+            ultimate_click_cost: 2500000,
+            ultimate_click_threshold: 1000000,
             cat_bought: false,
             cat2_bought: false,
             cat3_bought: false,
@@ -218,21 +286,13 @@ const useStore = create((set, get) => ({
             active_media: [],
         };
 
+        set({ ...initialState, activeMedia: [] });
+        // Re-set manuellement les coûts en camelCase pour le store local
         set({
-            score: 0,
-            perClick: 1,
-            perSecond: 0,
-            clickUpgradeCost: 50,
-            autoUpgradeCost: 100,
-            catUpgradeCost: 250,
-            cat2UpgradeCost: 1000,
-            cat3UpgradeCost: 10000,
-            volcanCost: 5000,
-            catBought: false,
-            cat2Bought: false,
-            cat3Bought: false,
-            volcanBought: false,
-            activeMedia: [],
+            megaClickCost: 5000000,
+            megaClickThreshold: 2000000,
+            gigaClickCost: 20000000,
+            gigaClickThreshold: 10000000
         });
 
         await supabase.from("game_state").update(initialState).eq("id", gameState.id);

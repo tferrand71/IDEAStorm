@@ -1,15 +1,21 @@
-/* ======== Style global ======== */
+/* ======== IMPORT DE POLICE ======== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+/* ======== RESET GLOBAL ======== */
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    /* Le background sera géré par les pages spécifiques maintenant */
-    background-color: #fad0c4;
+    font-family: 'Poppins', sans-serif; /* Moderne et lisible */
     color: #333;
     text-align: center;
     min-height: 100vh;
+    /* Couleur de fond de secours si l'image ne charge pas */
+    background-color: #fad0c4;
 }
 
-/* Configuration pour que l'app prenne tout l'écran */
 #root {
     width: 100%;
     min-height: 100vh;
@@ -17,8 +23,8 @@ body {
     flex-direction: column;
 }
 
-/* ======== Classes des Fonds d'écran (Backgrounds) ======== */
-/* Ces classes doivent être appliquées au conteneur principal de la page */
+/* ======== GESTION DES FONDS D'ÉCRAN ======== */
+/* Conteneur principal qui centre le contenu sur l'image */
 .page-full {
     min-height: 100vh;
     width: 100%;
@@ -28,9 +34,14 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed; /* L'image reste fixe quand on scrolle */
+    padding: 20px;
+    padding-top: 80px; /* Espace pour ne pas être caché par le menu */
 }
 
-/* Assurez-vous que vos images sont bien dans src/img/ avec ces noms */
+/* --- Vos Images de Fond --- */
+/* Assurez-vous que les fichiers sont bien dans src/img/ avec ces noms exacts */
+
 .bg-home {
     background-image: url('./img/fond_jeux.png');
 }
@@ -43,91 +54,190 @@ body {
     background-image: url('./img/fond_boutique.png');
 }
 
-/* ======== La "Carte" de jeu (Ancien style #root) ======== */
-/* C'est le conteneur blanc semi-transparent au centre */
-.game-card {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 40px;
-    border-radius: 25px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 350px;
-    margin: 20px auto; /* Centre horizontalement avec un peu de marge verticale */
-    position: relative;
-    z-index: 10; /* Au-dessus du fond */
+.bg-leaderboard {
+    background-image: url('./img/fond_leaderboard.png');
+    /* Ombre portée sur le texte pour qu'il soit lisible sur n'importe quelle image */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    color: white;
 }
 
-/* ======== Titres ======== */
+/* ======== LA "CARTE" DE JEU (Conteneur blanc) ======== */
+.game-card {
+    background: rgba(255, 255, 255, 0.92); /* Blanc légèrement transparent */
+    backdrop-filter: blur(5px); /* Petit effet de flou derrière */
+    padding: 40px;
+    border-radius: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2); /* Belle ombre douce */
+    width: 450px;
+    max-width: 100%;
+    margin: 20px auto;
+    position: relative;
+    z-index: 10;
+    color: #333; /* On force le texte en gris foncé dans la carte */
+    text-shadow: none;
+}
+
+/* Classe pour agrandir le tableau de classement */
+.card-wide {
+    width: 750px;
+}
+
+/* ======== TITRES ======== */
 h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+    color: #ff6f61;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+h2 {
     color: #ff6f61;
     margin-bottom: 20px;
-    text-shadow: 2px 2px #ffe3e0;
 }
 
 h3 {
     color: #ff6f61;
-    text-shadow: 1px 1px #ffe3e0;
+    margin-top: 0;
 }
 
-/* ======== Score ======== */
 p {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin: 10px 0;
+    color: #555;
 }
 
-/* ======== Boutons ======== */
+/* ======== INPUTS (Style propre) ======== */
+input {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border-color: #ff9a9e;
+    box-shadow: 0 0 0 4px rgba(255, 154, 158, 0.2);
+}
+
+/* ======== BOUTONS (Votre style coloré) ======== */
 button {
     cursor: pointer;
     border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
+    border-radius: 15px;
+    padding: 12px 24px;
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 600;
     transition: transform 0.1s, box-shadow 0.2s;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     margin: 5px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
 }
 
 button:active {
-    transform: scale(0.95);
+    transform: scale(0.96);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Bouton principal (clic) */
+button:disabled {
+    background: #ccc !important;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Gros bouton principal */
 .click-btn {
     background: linear-gradient(45deg, #ff9a9e, #fecfef);
-    color: white;
-    font-size: 1.5rem;
-    padding: 20px 40px;
+    font-size: 1.6rem;
+    padding: 20px 50px;
+    border-radius: 50px; /* Plus arrondi */
+    margin-top: 20px;
+    width: 100%;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Boutons d'amélioration */
+.upgrade-btn {
+    background: linear-gradient(45deg, #a18cd1, #fbc2eb);
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+/* Boutons Navigation (Header) - Style simple */
+.nav-btn {
+    background: linear-gradient(45deg, #84fab0, #8fd3f4);
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+/* Bouton Reset */
+.reset-btn {
+    background: linear-gradient(45deg, #ff9a9e, #ff6f61);
+    width: 100%;
     margin-top: 20px;
 }
 
-/* Bouton d'amélioration */
-.upgrade-btn {
-    background: linear-gradient(45deg, #a18cd1, #fbc2eb);
-    color: white;
+/* ======== TABLEAUX (Leaderboard) ======== */
+.table-container {
+    overflow-x: auto;
+    margin-top: 10px;
+}
+
+table {
     width: 100%;
-    margin-bottom: 10px;
+    border-collapse: collapse;
 }
 
-.upgrade-btn:disabled {
-    background: #ddd;
-    cursor: not-allowed;
+th {
+    text-align: center;
+    padding: 12px;
+    background-color: rgba(255, 111, 97, 0.1); /* Fond léger */
+    color: #ff6f61;
+    font-weight: 700;
+    border-radius: 8px;
 }
 
-/* Bouton Navigation (Shop / Retour) */
-.nav-btn {
-    background: linear-gradient(45deg, #84fab0, #8fd3f4);
-    color: #fff;
+td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+}
+
+/* ======== ELEMENTS DIVERS ======== */
+.stats-box {
+    background: #f9f9f9;
+    border-radius: 15px;
+    padding: 20px;
     margin-bottom: 20px;
+    border: 1px solid #eee;
+    text-align: left;
 }
 
-/* ======== Réinitialiser ======== */
-.reset-btn {
-    background: linear-gradient(45deg, #fbc2eb, #a6c1ee);
-    color: #fff;
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
+/* Lignes */
+hr {
+    border: 0;
+    height: 1px;
+    background: #eee;
+    margin: 20px 0;
+}
+
+/* Animations Volcan et Images */
 .media-overlay img,
 .media-overlay video {
     position: fixed;
@@ -137,40 +247,7 @@ button:active {
     animation: bounce 0.5s;
 }
 
-/* Volcano pixel art on the left */
-.volcano-container {
-    position: fixed;
-    left: 12px;
-    bottom: 25%;
-    width: 96px;
-    height: auto;
-    z-index: 900;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center;
-}
-
-.volcano-img {
-    width: 96px;
-    image-rendering: pixelated;
-    user-select: none;
-}
-
-.volcano-burst {
-    position: absolute;
-    left: 110px;
-    top: 10px;
-    font-weight: 800;
-    color: #ffd166;
-    font-size: 1.5rem;
-    text-shadow: 1px 1px 0 #000;
-    animation: fadeUp 1s forwards;
-    white-space: nowrap;
-}
-
-@keyframes fadeUp {
-    0% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-40px); }
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
 }

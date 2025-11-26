@@ -15,9 +15,9 @@ import useStore from "./store/useStore.js";
 import supabase from "./lib/supabaseClient.js";
 
 export default function App() {
-    const { score, perClick, perSecond, activeMedia, addScore, addPerSecond, user, setUser } = useStore();
+    // On récupère showMedia ici
+    const { score, perClick, perSecond, activeMedia, addScore, addPerSecond, user, setUser, showMedia } = useStore();
 
-    // Vérifie si l'utilisateur est connecté au démarrage
     useEffect(() => {
         const fetchSession = async () => {
             const { data } = await supabase.auth.getSession();
@@ -33,7 +33,6 @@ export default function App() {
         return () => listener.subscription.unsubscribe();
     }, []);
 
-    // Gain automatique par seconde
     useEffect(() => {
         const interval = setInterval(() => addPerSecond(), 1000);
         return () => clearInterval(interval);
@@ -41,12 +40,13 @@ export default function App() {
 
     return (
         <Router>
-            <Snow />
-            <MediaOverlay media={activeMedia} />
+            {/* Affichage conditionnel des effets visuels */}
+            {showMedia && <Snow />}
+            {showMedia && <MediaOverlay media={activeMedia} />}
+
             <Header />
 
             <Routes>
-                {/* PAGE JEU (HOME) */}
                 <Route
                     path="/"
                     element={
@@ -65,11 +65,8 @@ export default function App() {
                         )
                     }
                 />
-
-                {/* PAGE SHOP */}
                 <Route path="/pages" element={user ? <Shop /> : <Navigate to="/login" />} />
 
-                {/* PAGE LOGIN */}
                 <Route
                     path="/login"
                     element={
@@ -82,8 +79,6 @@ export default function App() {
                         )
                     }
                 />
-
-                {/* PAGE SIGNUP */}
                 <Route
                     path="/signup"
                     element={
