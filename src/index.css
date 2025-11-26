@@ -82,4 +82,44 @@ div {
     width: 150px; /* largeur par défaut */
     animation: bounce 0.5s; /* exemple d'animation */
 }
+/* Volcano pixel art on the left */
+.volcano-container {
+    position: fixed;
+    left: 12px;
+    bottom: 25%;
+    width: 96px;         /* ajuster la taille */
+    height: auto;
+    z-index: 900;        /* au-dessus du fond, en dessous des overlays si besoin */
+    pointer-events: none; /* pour ne pas bloquer les clics */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center;
+}
 
+/* garder l'aspect pixelisé (si image basse résolution) */
+.volcano-img {
+    width: 96px;
+    image-rendering: pixelated;
+    user-select: none;
+}
+
+/* "+150" burst animation */
+.volcano-burst {
+    position: absolute;
+    left: 110px; /* place le texte à droite du volcan */
+    top: 10px;
+    font-weight: 800;
+    color: #ffd166;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    animation: floatUp 1s ease-out forwards;
+    pointer-events: none;
+    font-family: "Comic Sans MS", "Arial", sans-serif;
+}
+
+/* animation */
+@keyframes floatUp {
+    0%   { transform: translateY(0) scale(1); opacity: 1; }
+    60%  { transform: translateY(-30px) scale(1.05); opacity: 0.9; }
+    100% { transform: translateY(-60px) scale(0.95); opacity: 0; }
+}

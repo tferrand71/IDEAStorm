@@ -1,39 +1,40 @@
 import React from "react";
+import DraggableMedia from "./DraggableMedia";
 
-export default function MediaOverlay({ media }) {
+export default function MediaOverlay({ media, setMedia, editorMode }) {
+
+    const updatePosition = (index, newPos) => {
+        const updated = [...media];
+        updated[index] = { ...updated[index], ...newPos };
+        setMedia(updated);
+        localStorage.setItem("mediaPositions", JSON.stringify(updated));
+    };
+
     return (
         <>
-            {media.map((item, index) =>
-                item.src.endsWith(".mp4") ? (
-                    <video
-                        key={index}
-                        src={item.src}
-                        autoPlay
-                        loop
-                        muted
-                        style={{
-                            position: "fixed",
-                            top: item.top,
-                            left: item.left,
-                            width: item.width || "150px",
-                            pointerEvents: "none",
-                            zIndex: 1000,
-                        }}
+            {media.map((m, i) =>
+                editorMode ? (
+                    <DraggableMedia
+                        key={i}
+                        item={m}
+                        index={i}
+                        updatePosition={updatePosition}
                     />
                 ) : (
-                    <img
-                        key={index}
-                        src={item.src}
-                        alt={item.alt || ""}
+                    <div
+                        key={i}
                         style={{
-                            position: "fixed",
-                            top: item.top,
-                            left: item.left,
-                            width: item.width || "150px",
-                            pointerEvents: "none",
-                            zIndex: 1000,
+                            position: "absolute",
+                            top: m.top,
+                            left: m.left,
                         }}
-                    />
+                    >
+                        {m.src.endsWith(".mp4") ? (
+                            <video src={m.src} width={m.width} autoPlay loop muted />
+                        ) : (
+                            <img src={m.src} width={m.width} />
+                        )}
+                    </div>
                 )
             )}
         </>

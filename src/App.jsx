@@ -1,56 +1,72 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+
 import ClickButton from "./components/ClickButton.jsx";
 import Score from "./components/Score.jsx";
-import Shop from "./components/Shop.jsx";
+import Shop from "./pages/Shop.jsx";
+import LoginForm from "./pages/LoginForm.jsx";
+import SignupForm from "./pages/SignupForm.jsx";
+
+import Header from "./components/Header.jsx";
 import MediaOverlay from "./components/MediaOverlay.jsx";
+import Snow from "./components/Snow.jsx";
+
+import useStore from "./store/useStore.js";
+import supabase from "./lib/supabaseClient.js";
 
 export default function App() {
-    // Score et upgrades
-    const [score, setScore] = useState(() => Number(localStorage.getItem("score")) || 0);
-    const [perClick, setPerClick] = useState(() => Number(localStorage.getItem("perClick")) || 1);
-    const [perSecond, setPerSecond] = useState(() => Number(localStorage.getItem("perSecond")) || 0);
+    const { score, perClick, perSecond, activeMedia, addScore, addPerSecond, user, setUser } = useStore();
 
-    // Médias affichés sur l’écran
-    const [activeMedia, setActiveMedia] = useState(() => {
-        return JSON.parse(localStorage.getItem("activeMedia")) || [];
-    });
-
-    // Sauvegarde automatique
+    // Vérifie si l'utilisateur est connecté au démarrage
     useEffect(() => {
-        localStorage.setItem("score", score);
-        localStorage.setItem("perClick", perClick);
-        localStorage.setItem("perSecond", perSecond);
-        localStorage.setItem("activeMedia", JSON.stringify(activeMedia));
-    }, [score, perClick, perSecond, activeMedia]);
+        const fetchSession = async () => {
+            const { data } = await supabase.auth.getSession();
+            if (data.session?.user) setUser(data.session.user);
+        };
+        fetchSession();
 
-    // Gain automatique
+        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) setUser(session.user);
+            else setUser(null);
+        });
+
+        return () => listener.subscription.unsubscribe();
+    }, []);
+
+    // Gain automatique par seconde
     useEffect(() => {
-        const interval = setInterval(() => {
-            setScore(prev => prev + perSecond);
-        }, 1000);
+        const interval = setInterval(() => addPerSecond(), 1000);
         return () => clearInterval(interval);
-    }, [perSecond]);
-
-    const handleClick = () => setScore(score + perClick);
+    }, [perSecond, addPerSecond]);
 
     return (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h1>IdeaStorm</h1>
-            <Score score={score} />
-            <p>Clic par clic : {perClick}</p>
-            <p>Gain automatique par seconde : {perSecond}</p>
-            <ClickButton onClick={handleClick} />
-            <Shop
-                score={score}
-                setScore={setScore}
-                perClick={perClick}
-                setPerClick={setPerClick}
-                perSecond={perSecond}
-                setPerSecond={setPerSecond}
-                activeMedia={activeMedia}
-                setActiveMedia={setActiveMedia}
-            />
+        <Router>
+            <Snow />
             <MediaOverlay media={activeMedia} />
-        </div>
+            <Header />
+
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        user ? (
+                            <div style={{ textAlign: "center", marginTop: "50px" }}>
+                                <h1>IdeaStorm</h1>
+                                <Score score={score} />
+                                <p>Clic par clic : {perClick}</p>
+                                <p>Gain automatique par seconde : {perSecond}</p>
+                                <ClickButton onClick={() => addScore(perClick)} />
+                            </div>
+                        ) : (
+                            <Navigate to="/login" />
+                        )
+                    }
+                />
+                <Route path="/pages" element={user ? <Shop /> : <Navigate to="/login" />} />
+                <Route path="/login" element={user ? <Navigate to="/" /> : <LoginForm />} />
+                <Route path="/signup" element={user ? <Navigate to="/" /> : <SignupForm />} />
+            </Routes>
+        </Router>
     );
 }
