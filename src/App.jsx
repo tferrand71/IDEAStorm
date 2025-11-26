@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-
 import ClickButton from "./components/ClickButton.jsx";
 import Score from "./components/Score.jsx";
 import Shop from "./pages/Shop.jsx";
@@ -47,25 +46,56 @@ export default function App() {
             <Header />
 
             <Routes>
+                {/* PAGE JEU (HOME) */}
                 <Route
                     path="/"
                     element={
                         user ? (
-                            <div style={{ textAlign: "center", marginTop: "50px" }}>
-                                <h1>IdeaStorm</h1>
-                                <Score score={score} />
-                                <p>Clic par clic : {perClick}</p>
-                                <p>Gain automatique par seconde : {perSecond}</p>
-                                <ClickButton onClick={() => addScore(perClick)} />
+                            <div className="page-full bg-home">
+                                <div className="game-card">
+                                    <h1>IdeaStorm</h1>
+                                    <Score score={score} />
+                                    <p>Clic par clic : {perClick}</p>
+                                    <p>Gain automatique par seconde : {perSecond}</p>
+                                    <ClickButton onClick={() => addScore(perClick)} />
+                                </div>
                             </div>
                         ) : (
                             <Navigate to="/login" />
                         )
                     }
                 />
+
+                {/* PAGE SHOP */}
                 <Route path="/pages" element={user ? <Shop /> : <Navigate to="/login" />} />
-                <Route path="/login" element={user ? <Navigate to="/" /> : <LoginForm />} />
-                <Route path="/signup" element={user ? <Navigate to="/" /> : <SignupForm />} />
+
+                {/* PAGE LOGIN */}
+                <Route
+                    path="/login"
+                    element={
+                        user ? <Navigate to="/" /> : (
+                            <div className="page-full bg-auth">
+                                <div className="game-card">
+                                    <LoginForm />
+                                </div>
+                            </div>
+                        )
+                    }
+                />
+
+                {/* PAGE SIGNUP */}
+                <Route
+                    path="/signup"
+                    element={
+                        user ? <Navigate to="/" /> : (
+                            <div className="page-full bg-auth">
+                                <div className="game-card">
+                                    <SignupForm />
+                                </div>
+                            </div>
+                        )
+                    }
+                />
             </Routes>
         </Router>
     );
