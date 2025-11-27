@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import ClickButton from "./components/ClickButton.jsx";
 import Score from "./components/Score.jsx";
 import Shop from "./pages/Shop.jsx";
+import Leaderboard from "./pages/Leaderboard.jsx";
 import LoginForm from "./pages/LoginForm.jsx";
 import SignupForm from "./pages/SignupForm.jsx";
 
@@ -14,8 +15,10 @@ import Snow from "./components/Snow.jsx";
 import useStore from "./store/useStore.js";
 import supabase from "./lib/supabaseClient.js";
 
+// Import pour le formatage
+import { formatNumber } from "./utils/format.js";
+
 export default function App() {
-    // On récupère showMedia ici
     const { score, perClick, perSecond, activeMedia, addScore, addPerSecond, user, setUser, showMedia } = useStore();
 
     useEffect(() => {
@@ -40,7 +43,6 @@ export default function App() {
 
     return (
         <Router>
-            {/* Affichage conditionnel des effets visuels */}
             {showMedia && <Snow />}
             {showMedia && <MediaOverlay media={activeMedia} />}
 
@@ -54,9 +56,13 @@ export default function App() {
                             <div className="page-full bg-home">
                                 <div className="game-card">
                                     <h1>IdeaStorm</h1>
+                                    {/* Le composant Score utilise déjà formatNumber à l'intérieur */}
                                     <Score score={score} />
-                                    <p>Clic par clic : {perClick}</p>
-                                    <p>Gain automatique par seconde : {perSecond}</p>
+
+                                    {/* Utilisation de formatNumber ici */}
+                                    <p>Clic par clic : {formatNumber(perClick)}</p>
+                                    <p>Gain automatique : {formatNumber(perSecond)} /s</p>
+
                                     <ClickButton onClick={() => addScore(perClick)} />
                                 </div>
                             </div>
@@ -66,31 +72,9 @@ export default function App() {
                     }
                 />
                 <Route path="/pages" element={user ? <Shop /> : <Navigate to="/login" />} />
-
-                <Route
-                    path="/login"
-                    element={
-                        user ? <Navigate to="/" /> : (
-                            <div className="page-full bg-auth">
-                                <div className="game-card">
-                                    <LoginForm />
-                                </div>
-                            </div>
-                        )
-                    }
-                />
-                <Route
-                    path="/signup"
-                    element={
-                        user ? <Navigate to="/" /> : (
-                            <div className="page-full bg-auth">
-                                <div className="game-card">
-                                    <SignupForm />
-                                </div>
-                            </div>
-                        )
-                    }
-                />
+                <Route path="/leaderboard" element={user ? <Leaderboard /> : <Navigate to="/login" />} />
+                <Route path="/login" element={user ? <Navigate to="/" /> : (<div className="page-full bg-auth"><div className="game-card"><LoginForm /></div></div>)} />
+                <Route path="/signup" element={user ? <Navigate to="/" /> : (<div className="page-full bg-auth"><div className="game-card"><SignupForm /></div></div>)} />
             </Routes>
         </Router>
     );

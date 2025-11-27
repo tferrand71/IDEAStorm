@@ -1,65 +1,58 @@
 import React from "react";
 import useStore from "../store/useStore";
+import { formatNumber } from "../utils/format"; // Import du formateur
 
 export default function Shop() {
     const store = useStore();
 
-    // Helper pour afficher une ligne : [ Bouton Achat (Gauche) ]   [ Bouton Vente (Droite) ]
-    // On utilise une grid CSS pour aligner parfaitement les deux colonnes.
-    const renderUpgradeRow = (label, cost, buyFn, sellFn, disabledBuy, sellDisabledCondition, buttonStyle = {}) => {
-        // Si l'objet n'est pas encore visible (threshold pas atteint), on retourne null
-        // Cette logique est gérée dans le render principal par les conditions store.score >= threshold
+    // Helper pour afficher une ligne : [ Bouton Achat ] [ Bouton Vente ]
+    const renderUpgradeRow = (label, cost, buyFn, sellFn, disabledBuy, sellDisabledCondition, buttonStyle = {}) => (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '10px', alignItems: 'center' }}>
+            {/* Bouton Achat */}
+            <button
+                className="upgrade-btn"
+                onClick={buyFn}
+                disabled={disabledBuy}
+                style={{ ...buttonStyle, width: '100%', margin: 0 }}
+            >
+                <span>{label}</span>
+                {/* PRIX FORMATÉ */}
+                <span style={{ fontSize: '0.8em' }}>{formatNumber(cost)} pts</span>
+            </button>
 
-        return (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '10px', alignItems: 'center' }}>
-                {/* COLONNE GAUCHE : ACHAT */}
+            {/* Bouton Vente */}
+            {!sellDisabledCondition ? (
                 <button
-                    className="upgrade-btn"
-                    onClick={buyFn}
-                    disabled={disabledBuy}
-                    style={{ ...buttonStyle, width: '100%', margin: 0 }}
+                    onClick={sellFn}
+                    style={{
+                        width: '100%',
+                        margin: 0,
+                        padding: '10px',
+                        background: 'rgba(255, 118, 117, 0.1)',
+                        border: '1px solid #ff7675',
+                        color: '#d63031',
+                        fontWeight: 'bold',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
+                    }}
+                    title="Vendre 1 niveau (Remboursement 50%)"
                 >
-                    <span>{label}</span>
-                    <span style={{ fontSize: '0.8em' }}>{cost.toLocaleString()} pts</span>
+                    Vendre (-1)
                 </button>
-
-                {/* COLONNE DROITE : VENTE */}
-                {/* Si on est au niveau de base (sellDisabledCondition = true), on cache le bouton ou on le grise */}
-                {!sellDisabledCondition ? (
-                    <button
-                        onClick={sellFn}
-                        style={{
-                            width: '100%',
-                            margin: 0,
-                            padding: '10px',
-                            background: 'rgba(255, 118, 117, 0.1)',
-                            border: '1px solid #ff7675',
-                            color: '#d63031',
-                            fontWeight: 'bold',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem'
-                        }}
-                        title="Vendre 1 niveau (Remboursement 50%)"
-                    >
-                        Vendre (-1)
-                    </button>
-                ) : (
-                    <div style={{ textAlign: 'center', color: '#ccc', fontSize: '0.8rem', fontStyle: 'italic' }}>
-                        (Rien à vendre)
-                    </div>
-                )}
-            </div>
-        );
-    };
+            ) : (
+                <div style={{ textAlign: 'center', color: '#ccc', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                    (Rien à vendre)
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <div className="page-full bg-shop">
-            {/* Carte élargie pour accueillir les deux colonnes confortablement */}
             <div className="game-card" style={{ maxWidth: '800px', width: '95%' }}>
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "25px" }}>
-                    {/* TITRE MIS À JOUR */}
                     <h2>Boutique de Titouan</h2>
                     <button
                         onClick={store.toggleMedia}
@@ -69,13 +62,13 @@ export default function Shop() {
                     </button>
                 </div>
 
+                {/* STATS FORMATÉES */}
                 <div className="stats-box">
-                    <div className="stats-row"><span>💰 Score</span> <b>{store.score.toLocaleString()}</b></div>
-                    <div className="stats-row"><span>👆 / Clic</span> <b>{store.perClick.toLocaleString()}</b></div>
-                    <div className="stats-row"><span>⏱️ / Sec</span> <b>{store.perSecond.toLocaleString()}</b></div>
+                    <div className="stats-row"><span>💰 Score</span> <b>{formatNumber(store.score)}</b></div>
+                    <div className="stats-row"><span>👆 / Clic</span> <b>{formatNumber(store.perClick)}</b></div>
+                    <div className="stats-row"><span>⏱️ / Sec</span> <b>{formatNumber(store.perSecond)}</b></div>
                 </div>
 
-                {/* EN-TÊTES DES COLONNES */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '10px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
                     <h3 style={{ margin: 0, color: '#ff7675' }}>ACHATS 🛒</h3>
                     <h3 style={{ margin: 0, color: '#d63031' }}>VENTES 💰</h3>
@@ -96,7 +89,6 @@ export default function Shop() {
                     {store.score >= store.gigaClickThreshold &&
                         renderUpgradeRow("🚀 Giga (+200k)", store.gigaClickCost, store.buyGigaClick, store.sellGigaClick, store.score < store.gigaClickCost, store.gigaClickCost <= 20000000, { borderColor: '#2ed573', background: 'rgba(46, 213, 115, 0.1)' })}
 
-                    {/* High Level Clics */}
                     {store.score >= store.click500kThreshold && renderUpgradeRow("💎 +500k", store.click500kCost, store.buy500k, store.sell500k, store.score < store.click500kCost, store.click500kCost <= 50000000, { borderColor: '#1e90ff', background: 'rgba(30, 144, 255, 0.1)' })}
                     {store.score >= store.click1mThreshold && renderUpgradeRow("💎 +1M", store.click1mCost, store.buy1m, store.sell1m, store.score < store.click1mCost, store.click1mCost <= 100000000, { borderColor: '#3742fa', background: 'rgba(55, 66, 250, 0.1)' })}
                     {store.score >= store.click10mThreshold && renderUpgradeRow("💎 +10M", store.click10mCost, store.buy10m, store.sell10m, store.score < store.click10mCost, store.click10mCost <= 1000000000, { borderColor: '#5352ed', background: 'rgba(83, 82, 237, 0.1)' })}
@@ -121,15 +113,12 @@ export default function Shop() {
                     {store.score >= store.auto100bThreshold && renderUpgradeRow("🧠 +100 Mrd Auto", store.auto100bCost, store.buyAuto100b, store.sellAuto100b, store.score < store.auto100bCost, store.auto100bCost <= 10000000000000, { borderColor: '#2d3436', background: 'rgba(45, 52, 54, 0.1)' })}
                 </div>
 
-                {/* === PUISSANCE === */}
                 <h3 style={{ textAlign: 'left', marginBottom: '15px', color: '#a29bfe' }}>Puissance</h3>
-
-                {/* Les multiplicateurs n'ont pas de bouton de vente pour simplifier, ou ils sont gérés différemment. Ici je les laisse en pleine largeur ou je peux utiliser renderUpgradeRow sans vente si souhaité. Pour garder la grille, je vais utiliser une div qui prend 2 colonnes ou juste la colonne achat. */}
 
                 {store.score >= store.multX2Threshold && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '10px' }}>
                         <button className="upgrade-btn" onClick={store.buyMultX2} disabled={store.score < store.multX2Cost} style={{ background: 'linear-gradient(45deg, #000, #444)', color: 'white', gridColumn: '1 / span 2' }}>
-                            <span>⚡ <b>Double Clic (x2)</b></span> <span>{store.multX2Cost.toLocaleString()} pts</span>
+                            <span>⚡ <b>Double Clic (x2)</b></span> <span>{formatNumber(store.multX2Cost)} pts</span>
                         </button>
                     </div>
                 )}
@@ -137,7 +126,7 @@ export default function Shop() {
                 {store.score >= store.autoMultX2Threshold && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '10px' }}>
                         <button className="upgrade-btn" onClick={store.buyAutoMultX2} disabled={store.score < store.autoMultX2Cost} style={{ background: 'linear-gradient(45deg, #2d3436, #636e72)', color: 'white', gridColumn: '1 / span 2' }}>
-                            <span>⚡ <b>Double Auto (x2)</b></span> <span>{store.autoMultX2Cost.toLocaleString()} pts</span>
+                            <span>⚡ <b>Double Auto (x2)</b></span> <span>{formatNumber(store.autoMultX2Cost)} pts</span>
                         </button>
                     </div>
                 )}
@@ -146,33 +135,31 @@ export default function Shop() {
                     renderUpgradeRow("🌌 Ultimate (x3)", store.ultimateClickCost, store.buyUltimateClick, store.sellUltimateClick, store.score < store.ultimateClickCost, store.ultimateClickCost <= 2500000, { background: 'linear-gradient(45deg, #6c5ce7, #a29bfe)', color: 'white' })
                 }
 
-                {/* === OBJETS SPÉCIAUX === */}
                 <br />
                 <h3 style={{ textAlign: 'left', marginBottom: '15px', marginTop: '10px', color: '#333' }}>Compagnons</h3>
 
-                {/* Les compagnons sont uniques, pas de vente "par niveau" */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {!store.catBought ? (
                         <button className="upgrade-btn" onClick={store.buyCatUpgrade} disabled={store.score < store.catUpgradeCost}>
-                            <span>🐱 Chat (+10/s)</span> <span>{store.catUpgradeCost} pts</span>
+                            <span>🐱 Chat (+10/s)</span> <span>{formatNumber(store.catUpgradeCost)} pts</span>
                         </button>
                     ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Chat acquis</div>}
 
                     {!store.cat2Bought ? (
                         <button className="upgrade-btn" onClick={store.buyCat2Upgrade} disabled={store.score < store.cat2UpgradeCost}>
-                            <span>😼 Chat Ninja (+50/s)</span> <span>{store.cat2UpgradeCost} pts</span>
+                            <span>😼 Chat Ninja (+50/s)</span> <span>{formatNumber(store.cat2UpgradeCost)} pts</span>
                         </button>
                     ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Chat Ninja acquis</div>}
 
                     {!store.cat3Bought ? (
                         <button className="upgrade-btn" onClick={store.buyCat3Upgrade} disabled={store.score < store.cat3UpgradeCost}>
-                            <span>👑 Roi Chat (+10k/s)</span> <span>{store.cat3UpgradeCost.toLocaleString()} pts</span>
+                            <span>👑 Roi Chat (+10k/s)</span> <span>{formatNumber(store.cat3UpgradeCost)} pts</span>
                         </button>
                     ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Roi Chat acquis</div>}
 
                     {!store.volcanBought ? (
                         <button className="upgrade-btn" onClick={store.buyVolcan} disabled={store.score < store.volcanCost}>
-                            <span>🌋 Volcan (+30/s)</span> <span>{store.volcanCost.toLocaleString()} pts</span>
+                            <span>🌋 Volcan (+30/s)</span> <span>{formatNumber(store.volcanCost)} pts</span>
                         </button>
                     ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Volcan acquis</div>}
                 </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import useStore from '../store/useStore';
 import { fetchLeaderboard } from '../utils/api';
+import { formatNumber } from '../utils/format';
 
 export default function Leaderboard() {
     const { user } = useStore();
@@ -26,7 +27,6 @@ export default function Leaderboard() {
 
     return (
         <div className="page-full bg-leaderboard">
-            {/* La classe 'card-wide' élargit la carte pour que le tableau respire */}
             <div className="game-card card-wide">
                 <h2>🏆 Classement Mondial</h2>
 
@@ -39,7 +39,7 @@ export default function Leaderboard() {
                             <tr>
                                 <th style={{width: '50px'}}>#</th>
                                 <th>Utilisateur</th>
-                                <th>Points Total</th>
+                                <th>Points</th>
                                 <th>Clics/s</th>
                                 <th>Pts/Clic</th>
                             </tr>
@@ -48,7 +48,6 @@ export default function Leaderboard() {
                             {leaderboardData.map((item) => (
                                 <tr key={item.rank}
                                     style={
-                                        // Surlignage si c'est l'utilisateur connecté
                                         item.username === user?.user_metadata?.username || item.username === user?.email?.split('@')[0] || item.username === user?.email
                                             ? { background: 'rgba(255, 118, 117, 0.15)', fontWeight: 'bold' }
                                             : {}
@@ -59,10 +58,10 @@ export default function Leaderboard() {
                                     </td>
                                     <td>{item.username}</td>
                                     <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>
-                                        {item.score.toLocaleString()}
+                                        {formatNumber(item.score)}
                                     </td>
-                                    <td>{item.perSecond.toLocaleString()}</td>
-                                    <td>{item.perClick.toLocaleString()}</td>
+                                    <td>{formatNumber(item.perSecond)}</td>
+                                    <td>{formatNumber(item.perClick)}</td>
                                 </tr>
                             ))}
                             </tbody>
