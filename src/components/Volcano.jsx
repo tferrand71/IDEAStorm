@@ -35,7 +35,7 @@ export default function Volcano({ setScore, enabled = true }) {
         <>
             <div className="volcano-container" aria-hidden="true">
                 <img
-                    src="/src/img/volcano.png"                 // mettre volcano.png dans public/
+                    src="../img/volcano.png"                 // mettre volcano.png dans public/
                     alt=""
                     className="volcano-img"
                     draggable="false"

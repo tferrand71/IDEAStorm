@@ -33,10 +33,9 @@ body {
     align-items: center;
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed; /* L'image reste fixe quand on scrolle */
-    padding: 20px;
-    padding-top: 80px; /* Espace pour ne pas être caché par le menu */
+    background-attachment: fixed;
+    padding-top: 80px;
+    /* Pas de position: absolute ici ! */
 }
 
 /* --- Vos Images de Fond --- */

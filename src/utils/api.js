@@ -30,24 +30,25 @@ export async function signIn(username, password) {
     return { user: data, gameState: gameData };
 }
 
-// --- RÉCUPÉRATION DU CLASSEMENT COMPLET ---
+// --- NOUVELLE FONCTION LEADERBOARD (Via la Vue) ---
 export async function fetchLeaderboard() {
+    // On interroge directement la vue 'leaderboard' créée en SQL
     const { data, error } = await supabase
-        .from('game_state')
-        // On récupère le score, clics/s (per_second), pts/clic (per_click) et le pseudo
-        .select('score, per_second, per_click, users(username)')
-        .order('score', { ascending: false })
-        .limit(10);
+        .from('leaderboard')
+        .select('*')
+        .limit(10); // Top 10
 
-    if (error) throw error;
+    if (error) {
+        console.error("Erreur Supabase:", error);
+        throw error;
+    }
 
-    // Formatage des données pour le composant
+    // Plus besoin de "item.users.username", c'est direct "item.username"
     return data.map((item, index) => ({
         rank: index + 1,
+        username: item.username || 'Inconnu',
         score: item.score,
         perSecond: item.per_second,
-        perClick: item.per_click,
-        // Sécurité si l'utilisateur a été supprimé
-        username: item.users ? item.users.username : 'Utilisateur inconnu',
+        perClick: item.per_click
     }));
 }
