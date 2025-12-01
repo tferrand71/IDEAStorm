@@ -10,6 +10,7 @@ import chatSeducteur from "../img/séducteur.mp4";
 import volcanPistolet from "../img/pistolet.mp4";
 import oieGoose from "../img/goose.mp4";
 
+
 export default function MediaOverlay() {
     const { catBought, cat2Bought, cat3Bought, volcanBought, gooseBought } = useStore();
 

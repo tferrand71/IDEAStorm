@@ -27,7 +27,7 @@ const useStore = create((set, get) => ({
     // NIVEAU 1 : BASIQUE
     clickUpgradeCost: 50, autoUpgradeCost: 100,
     catUpgradeCost: 250, cat2UpgradeCost: 1000, cat3UpgradeCost: 10000,
-    volcanCost: 5000, gooseCost: 50000, // Prix de l'Oie
+    volcanCost: 5000, gooseCost: 50000,
 
     // NIVEAU 2 : SPÉCIAUX
     superClickCost: 500000, superClickThreshold: 500000,
