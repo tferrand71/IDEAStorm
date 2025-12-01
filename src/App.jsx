@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-// 1. CHANGEMENT ICI : Import de HashRouter
+// 1. CHANGEMENT ICI : On importe HashRouter au lieu de BrowserRouter
 import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import ClickButton from "./components/ClickButton.jsx";
@@ -41,7 +41,8 @@ export default function App() {
     const showEnding = score >= END_GAME_THRESHOLD && !hasSeenEnding;
 
     return (
-        // 2. CHANGEMENT ICI : On retire le 'basename', HashRouter n'en a pas besoin pour ça
+        // 2. CHANGEMENT ICI : On utilise <Router> tout court (qui est le HashRouter)
+        // Plus besoin de 'basename' avec le HashRouter
         <Router>
             {showMedia && <Snow />}
             {showMedia && <MediaOverlay media={activeMedia} />}
