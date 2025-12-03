@@ -122,3 +122,4 @@ out
 # Vite
 dist-ssr
 *.local
+/dist/
