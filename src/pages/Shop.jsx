@@ -157,9 +157,9 @@ export default function Shop() {
 
                     {!store.volcanBought ? (
                         <button className="upgrade-btn" onClick={store.buyVolcan} disabled={store.score < store.volcanCost}>
-                            <span>🌋 Volcan (+30/s)</span> <span>{formatNumber(store.volcanCost)} pts</span>
+                            <span>Chat Tueur 🔫 (+30/s)</span> <span>{formatNumber(store.volcanCost)} pts</span>
                         </button>
-                    ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Volcan acquis</div>}
+                    ) : <div className="upgrade-btn" style={{opacity: 0.7, justifyContent: 'center', background: '#e0e0e0'}}>✅ Chat Tueur acquis</div>}
                 </div>
 
                 <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
