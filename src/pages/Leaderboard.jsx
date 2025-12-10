@@ -1,85 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import useStore from '../store/useStore';
-import { fetchLeaderboard } from '../utils/api';
-import { formatNumber } from '../utils/format'; // Assurez-vous que ce fichier existe !
+import React, { useEffect, useState } from "react";
+import supabase from "../lib/supabaseClient";
+import { formatNumber } from "../utils/format";
 
 export default function Leaderboard() {
-    const { user } = useStore();
-    const [leaderboardData, setLeaderboardData] = useState(null);
+    const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // On charge le classement dès que la page s'ouvre
-        const loadLeaderboard = async () => {
-            try {
-                setLoading(true);
-                const data = await fetchLeaderboard();
-                setLeaderboardData(data);
-            } catch (error) {
-                console.error("Impossible de charger le classement:", error);
-            } finally {
-                setLoading(false);
+        const fetchLeaderboard = async () => {
+            // On appelle la vue simplifiée
+            const { data, error } = await supabase
+                .from("leaderboard_view")
+                .select("*")
+                .order("rank", { ascending: true }) // Le tri est déjà fait, on suit le rang
+                .limit(50);
+
+            if (error) {
+                console.error("Erreur leaderboard:", error);
+            } else {
+                setPlayers(data);
             }
+            setLoading(false);
         };
 
-        if (user) {
-            loadLeaderboard();
-        }
-    }, [user]); // Se recharge si l'utilisateur change (connexion/déconnexion)
+        fetchLeaderboard();
+        const interval = setInterval(fetchLeaderboard, 10000); // Refresh auto 10s
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="page-full bg-leaderboard">
-            <div className="game-card card-wide">
-                <h2>🏆 Classement Mondial</h2>
+            <div className="game-card" style={{ maxWidth: '850px', width: '95%' }}>
+                <h1 style={{ color: '#0984e3', marginBottom: '20px', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                    🏆 Classement Mondial
+                </h1>
 
                 {loading ? (
-                    <p>Chargement des scores...</p>
-                ) : leaderboardData && leaderboardData.length > 0 ? (
-                    <div className="table-container">
-                        <table>
+                    <div style={{ padding: '20px', fontSize: '1.2rem', color: '#666' }}>Chargement des champions... ⏳</div>
+                ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', borderRadius: '10px', overflow: 'hidden' }}>
                             <thead>
-                            <tr>
-                                <th style={{ width: '60px', textAlign: 'center' }}>#</th>
-                                <th>Joueur</th>
-                                <th>Score Total</th>
-                                <th>Clics / sec</th>
-                                <th>Pts / Clic</th>
+                            <tr style={{ background: '#74b9ff', color: 'white' }}>
+                                <th style={{ padding: '15px', textAlign: 'center', width: '60px' }}>#</th>
+                                <th style={{ padding: '15px', textAlign: 'left' }}>Joueur</th>
+                                <th style={{ padding: '15px', textAlign: 'center' }}>🔥 Rebirths</th>
+                                <th style={{ padding: '15px', textAlign: 'right' }}>Score</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {leaderboardData.map((item) => {
-                                // Vérifie si c'est la ligne du joueur connecté pour la mettre en valeur
-                                const isMe = user && (
-                                    item.username === user.user_metadata?.username ||
-                                    item.username === user.email // Fallback si username n'est pas dans metadata
-                                );
+                            {players.map((player) => {
+                                // Style Top 3
+                                let rankBadge = <span style={{fontWeight:'bold', color: '#777'}}>#{player.rank}</span>;
+                                let rowStyle = { borderBottom: '1px solid #eee', background: 'white' };
+
+                                if (player.rank === 1) {
+                                    rankBadge = <span style={{fontSize:'1.5rem'}}>🥇</span>;
+                                    rowStyle = { ...rowStyle, background: 'linear-gradient(90deg, rgba(255,215,0,0.2), white)', borderLeft: '5px solid gold' };
+                                } else if (player.rank === 2) {
+                                    rankBadge = <span style={{fontSize:'1.5rem'}}>🥈</span>;
+                                    rowStyle = { ...rowStyle, background: 'linear-gradient(90deg, rgba(192,192,192,0.2), white)', borderLeft: '5px solid silver' };
+                                } else if (player.rank === 3) {
+                                    rankBadge = <span style={{fontSize:'1.5rem'}}>🥉</span>;
+                                    rowStyle = { ...rowStyle, background: 'linear-gradient(90deg, rgba(205,127,50,0.2), white)', borderLeft: '5px solid #cd7f32' };
+                                }
 
                                 return (
-                                    <tr key={item.rank}
-                                        style={isMe ? { background: 'rgba(255, 118, 117, 0.2)', fontWeight: 'bold' } : {}}
-                                    >
-                                        <td style={{ textAlign: 'center', fontSize: '1.2rem' }}>
-                                            {item.rank === 1 ? '🥇' : item.rank === 2 ? '🥈' : item.rank === 3 ? '🥉' : item.rank}
+                                    <tr key={player.rank} style={rowStyle}>
+                                        <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
+                                            {rankBadge}
                                         </td>
-                                        <td>
-                                            {item.username}
-                                            {isMe && <span style={{ fontSize: '0.8em', color: '#ff6f61', marginLeft: '5px' }}>(Toi)</span>}
+
+                                        <td style={{ padding: '12px', fontWeight: '600', color: '#2d3436' }}>
+                                            {/* On affiche directement player.username, plus besoin de player.profiles... */}
+                                            {player.username || "Anonyme"}
                                         </td>
-                                        <td style={{ color: '#ff6f61', fontWeight: 'bold' }}>
-                                            {formatNumber(item.score)}
+
+                                        {/* Badge Rebirth */}
+                                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                                            {player.rebirth_count > 0 ? (
+                                                <div style={{
+                                                    display: 'inline-block',
+                                                    background: 'linear-gradient(45deg, #2c3e50, #000)',
+                                                    color: 'gold',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '0.9em',
+                                                    fontWeight: 'bold',
+                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                                }}>
+                                                    ★ {player.rebirth_count}
+                                                </div>
+                                            ) : (
+                                                <span style={{ color: '#ccc' }}>-</span>
+                                            )}
                                         </td>
-                                        <td>{formatNumber(item.perSecond)}</td>
-                                        <td>{formatNumber(item.perClick)}</td>
+
+                                        <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontSize: '1.1em', color: '#0984e3' }}>
+                                            {formatNumber(player.score)}
+                                        </td>
                                     </tr>
                                 );
                             })}
                             </tbody>
                         </table>
-                    </div>
-                ) : (
-                    <div style={{ padding: '20px', color: '#666' }}>
-                        <p>Le classement est vide ou inaccessible.</p>
-                        <p style={{ fontSize: '0.9rem' }}>Vérifiez votre connexion internet.</p>
                     </div>
                 )}
             </div>
